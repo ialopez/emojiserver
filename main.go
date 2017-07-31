@@ -86,5 +86,11 @@ func main() {
 	emojiArt.InitEmojiDictAvg()
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/view/", resultHandler)
+	http.Handle("/images/apple/", http.StripPrefix("/images/apple/", http.FileServer(http.Dir("../emojiArt/apple/"))))
+	http.Handle("/images/emojione/", http.StripPrefix("/images/emojione/", http.FileServer(http.Dir("../emojiArt/emojione/"))))
+	http.Handle("/images/facebook/", http.StripPrefix("/images/facebook/", http.FileServer(http.Dir("../emojiArt/apple/"))))
+	http.Handle("/images/facebook-messenger/", http.StripPrefix("/images/facebook-messenger/", http.FileServer(http.Dir("../emojiArt/facebook-messenger/"))))
+	http.Handle("/images/google/", http.StripPrefix("/images/google/", http.FileServer(http.Dir("../emojiArt/google/"))))
+	http.Handle("/images/twitter/", http.StripPrefix("/images/twitter/", http.FileServer(http.Dir("../emojiArt/twitter/"))))
 	http.ListenAndServe(":8080", nil)
 }
