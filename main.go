@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt" //reader writer
-	"github.com/ialopez/emojiArt"
+	"github.com/ialopez/emojiart"
 	"html/template"
 	"image"
 	"image/png"
@@ -61,7 +61,7 @@ func resultHandler(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 	io.Copy(f, file)
 	img := openPNG("./" + handler.Filename)
-	picToEmoji := emojiArt.NewPicToEmoji(squareSize, platform, false, img)
+	picToEmoji := emojiart.NewPicToEmoji(squareSize, platform, false, img)
 	resultImg := picToEmoji.CreateEmojiArt()
 
 	buffer := new(bytes.Buffer)
@@ -82,15 +82,15 @@ func resultHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	emojiArt.InitEmojiDict()
-	emojiArt.InitEmojiDictAvg()
+	emojiart.InitEmojiDict()
+	emojiart.InitEmojiDictAvg()
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/view/", resultHandler)
 	http.Handle("/images/apple/", http.StripPrefix("/images/apple/", http.FileServer(http.Dir("../emojiArt/apple/"))))
-	http.Handle("/images/emojione/", http.StripPrefix("/images/emojione/", http.FileServer(http.Dir("../emojiArt/emojione/"))))
-	http.Handle("/images/facebook/", http.StripPrefix("/images/facebook/", http.FileServer(http.Dir("../emojiArt/apple/"))))
-	http.Handle("/images/facebook-messenger/", http.StripPrefix("/images/facebook-messenger/", http.FileServer(http.Dir("../emojiArt/facebook-messenger/"))))
-	http.Handle("/images/google/", http.StripPrefix("/images/google/", http.FileServer(http.Dir("../emojiArt/google/"))))
-	http.Handle("/images/twitter/", http.StripPrefix("/images/twitter/", http.FileServer(http.Dir("../emojiArt/twitter/"))))
+	http.Handle("/images/emojione/", http.StripPrefix("/images/emojione/", http.FileServer(http.Dir("../emojiart/emojione/"))))
+	http.Handle("/images/facebook/", http.StripPrefix("/images/facebook/", http.FileServer(http.Dir("../emojiart/apple/"))))
+	http.Handle("/images/facebook-messenger/", http.StripPrefix("/images/facebook-messenger/", http.FileServer(http.Dir("../emojiart/facebook-messenger/"))))
+	http.Handle("/images/google/", http.StripPrefix("/images/google/", http.FileServer(http.Dir("../emojiart/google/"))))
+	http.Handle("/images/twitter/", http.StripPrefix("/images/twitter/", http.FileServer(http.Dir("../emojiart/twitter/"))))
 	http.ListenAndServe(":8080", nil)
 }
