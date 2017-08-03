@@ -10,9 +10,20 @@ class App extends Component {
           <img src={logo} className="App-logo" alt="logo" />
           <h2>Welcome to React</h2>
         </div>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        <form action="/view/result.html" method="POST" enctype="multipart/form-data">
+            <div>
+                <input type="file" name="pic" value="choose file" /><br />
+                enter square size<input type="number" name="squareSize" /><br />
+                <input type="radio" name="platform" value="apple" />Apple
+                <input type="radio" name="platform" value="facebook" />Facebook
+                <input type="radio" name="platform" value="twitter" />Twitter
+                <input type="radio" name="platform" value="facebook-messenger" />Facebook Messenger
+                <input type="radio" name="platform" value="emojione" />emojione
+                <div>
+                    <input type="submit" value="meme" />
+                </div>
+            </div>
+        </form>
       </div>
     );
   }

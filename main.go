@@ -14,6 +14,7 @@ import (
 	"net/http" //used to handle serve http requests
 	"os"       //used to create files in server
 	"strconv"
+	"encoding/json"
 )
 
 var mainPage, _ = ioutil.ReadFile("./main.html") //read in main page from main.html
@@ -81,16 +82,54 @@ func resultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(32 << 20)
+	//get file and handler that was submitted to server
+	file, handler, err := r.FormFile("pic")
+	squareSize, err := strconv.Atoi(r.FormValue("squareSize"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	platform := r.FormValue("platform")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	f, err := os.OpenFile("./"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+	io.Copy(f, file)
+	img := openPNG("./" + handler.Filename)
+	picToEmoji := emojiart.NewPicToEmoji(squareSize, platform, false, img)
+	resultMap := picToEmoji.CreateEmojiArtMap()
+
+	err = json.NewEncoder(w).Encode(resultMap)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+}
+
 func main() {
+	//initialize emoji dictionaries
 	emojiart.InitEmojiDict()
 	emojiart.InitEmojiDictAvg()
+
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/view/", resultHandler)
+	http.HandleFunc("/pictoemoji/", picToEmojiHandler)
+
+	//serve emoji images
 	http.Handle("/images/apple/", http.StripPrefix("/images/apple/", http.FileServer(http.Dir("../emojiArt/apple/"))))
 	http.Handle("/images/emojione/", http.StripPrefix("/images/emojione/", http.FileServer(http.Dir("../emojiart/emojione/"))))
 	http.Handle("/images/facebook/", http.StripPrefix("/images/facebook/", http.FileServer(http.Dir("../emojiart/apple/"))))
 	http.Handle("/images/facebook-messenger/", http.StripPrefix("/images/facebook-messenger/", http.FileServer(http.Dir("../emojiart/facebook-messenger/"))))
 	http.Handle("/images/google/", http.StripPrefix("/images/google/", http.FileServer(http.Dir("../emojiart/google/"))))
 	http.Handle("/images/twitter/", http.StripPrefix("/images/twitter/", http.FileServer(http.Dir("../emojiart/twitter/"))))
+
 	http.ListenAndServe(":8080", nil)
 }
