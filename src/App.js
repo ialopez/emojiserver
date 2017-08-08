@@ -4,21 +4,91 @@ import './App.css';
 import $ from 'jquery';
 
 class FileForm extends Component {
+  render() {
+    let picture;
+    if (this.props.data_uri) {
+      picture = <img src={this.props.data_uri} alt=""/>;
+    }
+    return (
+      <div>
+        <input type="file" onChange={this.props.handleFile} />
+        <br />
+        enter square size<input type="number" onChange={this.props.handleSquareSize} />
+        <br />
+        <input type="radio" value="apple" onChange={this.props.handlePlatform} checked={this.props.platform === "apple"}/>Apple
+        <input type="radio" value="facebook" onChange={this.props.handlePlatform} checked={this.props.platform === "facebook"}/>Facebook
+        <input type="radio" value="twitter" onChange={this.props.handlePlatform} checked={this.props.platform === "twitter"}/>Twitter
+        <input type="radio" value="facebook-messenger" onChange={this.props.handlePlatform} checked={this.props.platform === "facebook-messenger"}/>Facebook Messenger
+        <input type="radio" value="emojione" onChange={this.props.handlePlatform} checked={this.props.platform === "emojione"}/>emojione
+        <br />
+        <input type="button" value="meme" onClick={this.props.onSubmit}/>
+        <br />
+        {picture}
+      </div>
+    );
+  }
+}
+
+class EmojiGrid extends Component {
+  render() {
+    let list;
+    return (
+      <div>
+        emojigrid
+      </div>
+    );
+  }
+}
+
+class App extends Component {
   constructor() {
     super();
     this.state = {
+      emojiMap: null,
       data_uri: "",
       filename: "",
       filetype: "",
       squareSize: "",
       platform: "apple",
       processing: false,
-      response: "",
-    };
+    }
+    this.handleSubmit = this.handleSubmit.bind(this)
     this.handlePlatform = this.handlePlatform.bind(this);
     this.handleSquareSize = this.handleSquareSize.bind(this);
     this.handleFile = this.handleFile.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleSubmit(event) {
+    console.log("submit");
+    console.log(this.state);
+
+    this.setState({
+      processing: true,
+    });
+
+    const promise = $.ajax({
+      url: "http://localhost:8080/pictoemoji/",
+      type: "POST",
+      data: JSON.stringify({
+        data_uri: this.state.data_uri,
+        filename: this.state.filename,
+        filetype: this.state.filetype,
+        platform: this.state.platform,
+        squaresize: this.state.squareSize,
+      }),
+      dataType: "json",
+    });
+
+    promise.done((data) => {
+      console.log("promise done");
+      this.setState({
+        emojiMap: data,
+      });
+    })
+    .fail((xhr) => {
+      console.log("error", xhr);
+    })
+
   }
 
   handleFile(event) {
@@ -55,77 +125,24 @@ class FileForm extends Component {
     });
   }
 
-  handleSubmit(event) {
-    event.preventDefault();
-    const _this = this;
-
-    this.setState({
-      processing: true,
-    })
-
-    console.log(this.state.squareSize)
-
-    const promise = $.ajax({
-      url: "http://localhost:8080/pictoemoji/",
-      type: "POST",
-      data: JSON.stringify({
-        data_uri: this.state.data_uri,
-        filename: this.state.filename,
-        filetype: this.state.filetype,
-        platform: this.state.platform,
-        squaresize: this.state.squareSize,
-      }),
-      dataType: "json",
-    });
-
-    promise.done((data) => {
-      this.setState({
-        processing: false,
-        response: data.uri,
-      });
-      console.log(data)
-    });
-
-  }
-
   render() {
-    let picture;
-    if (this.state.data_uri) {
-      picture = <img src={this.state.data_uri} alt=""/>;
+    let currentScreen;
+    if (this.state.emojiMap) {
+      currentScreen = <EmojiGrid map={this.emojiMap}/>
     }
-    return (
-      <div>
-        <form onSubmit={this.handleSubmit} encType="multipart/form-data">
-          <input type="file" onChange={this.handleFile} />
-          <br />
-          enter square size<input type="number" onChange={this.handleSquareSize} />
-          <br />
-          <input type="radio" value="apple" onChange={this.handlePlatform} checked={this.state.platform === "apple"}/>Apple
-          <input type="radio" value="facebook" onChange={this.handlePlatform} checked={this.state.platform === "facebook"}/>Facebook
-          <input type="radio" value="twitter" onChange={this.handlePlatform} checked={this.state.platform === "twitter"}/>Twitter
-          <input type="radio" value="facebook-messenger" onChange={this.handlePlatform} checked={this.state.platform === "facebook-messenger"}/>Facebook Messenger
-          <input type="radio" value="emojione" onChange={this.handlePlatform} checked={this.state.platform === "emojione"}/>emojione
-          <br />
-          <input type="submit" value="meme" />
-        </form>
-        {picture}
-      </div>
-    );
-  }
-}
-
-
-class App extends Component {
-
-  render() {
+    else if (this.state.processing) {
+      currentScreen = <div>processing</div>
+    }
+    else {
+      currentScreen = <FileForm onSubmit={this.handleSubmit} handleFile={this.handleFile} handleSquareSize={this.handleSquareSize} handlePlatform={this.handlePlatform} platform={this.state.platform} data_uri={this.state.data_uri}/>
+    }
     return (
       <div className="App">
         <div className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <h2>Welcome to React</h2>
         </div>
-        <FileForm />
-        test
+        {currentScreen}
       </div>
     );
   }
