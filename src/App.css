@@ -22,3 +22,13 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+.emoji-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.emoji-grid-row {
+  display: flex;
+  flex-direction: row;
+}

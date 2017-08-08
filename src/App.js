@@ -31,10 +31,32 @@ class FileForm extends Component {
 
 class EmojiGrid extends Component {
   render() {
-    let list;
+    const imageLib = {};
+    let prop;
+    for(prop in this.props.emojiMap.dictionary) {
+      console.log(prop);
+      const imgElement = <img src={"http://localhost:8080" + this.props.emojiMap.dictionary[prop]} />;
+      imageLib[prop] = imgElement;
+    }
+
+    const grid = [];
+    for (let i = 0; i < this.props.emojiMap.mapping.length; i++) {
+      const images = [];
+      for (let j = 0; j < this.props.emojiMap.mapping[0].length; j++) {
+        images.push(imageLib[this.props.emojiMap.mapping[i][j]]);
+      }
+      const row = <div className="emoji-grid-row">{images}</div>;
+      grid.push(row);
+    }
+
     return (
       <div>
-        emojigrid
+        <div>
+          emojigrid
+        </div>
+        <div className="emoji-grid">
+          {grid}
+        </div>
       </div>
     );
   }
@@ -128,7 +150,7 @@ class App extends Component {
   render() {
     let currentScreen;
     if (this.state.emojiMap) {
-      currentScreen = <EmojiGrid map={this.emojiMap}/>
+      currentScreen = <EmojiGrid emojiMap={this.state.emojiMap}/>
     }
     else if (this.state.processing) {
       currentScreen = <div>processing</div>
