@@ -3,19 +3,19 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"fmt" //reader writer
 	"github.com/ialopez/emojiart"
 	"html/template"
 	"image"
-	"image/png"
 	_ "image/jpeg"
+	"image/png"
 	"io"        //used to write read files
 	"io/ioutil" //read files
 	"log"
 	"net/http" //used to handle serve http requests
 	"os"       //used to create files in server
 	"strconv"
-	"encoding/json"
 	"strings"
 )
 
@@ -38,7 +38,7 @@ func openPNG(path string) image.Image {
 
 //serve main page
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, string(indexPage))
+	http.ServeFile(w, r, "./build/index.html")
 }
 
 //serve result page, seen after submitting picture to server
@@ -91,11 +91,11 @@ func resultHandler(w http.ResponseWriter, r *http.Request) {
 func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 	//create struct to represent json object from http request
 	type fileInfo struct {
-		Data_uri	string	`json:"data_uri"`
-		Filename	string	`json:"filename"`
-		Filetype	string	`json:"filetype"`
-		Platform	string	`json:"platform"`
-		SquareSize	int	`json:"squaresize"`
+		Data_uri   string `json:"data_uri"`
+		Filename   string `json:"filename"`
+		Filetype   string `json:"filetype"`
+		Platform   string `json:"platform"`
+		SquareSize int    `json:"squaresize"`
 	}
 
 	var fi fileInfo
@@ -114,8 +114,8 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	picToEmoji := emojiart.NewPicToEmoji(fi.SquareSize, fi.Platform, false, img)
+
 	resultMap := picToEmoji.CreateEmojiArtMap()
 
 	err = json.NewEncoder(w).Encode(resultMap)
@@ -126,16 +126,11 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//initialize emoji dictionaries
-	emojiart.InitEmojiDict()
+	//initialize emoji dictionarie
 	emojiart.InitEmojiDictAvg()
 
-	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/view/", resultHandler)
 	http.HandleFunc("/pictoemoji/", picToEmojiHandler)
-
-	//serve javascript files
-	http.Handle("/src/", http.StripPrefix("/src/", http.FileServer(http.Dir("./src/"))))
 
 	//serve emoji images
 	http.Handle("/images/apple/", http.StripPrefix("/images/apple/", http.FileServer(http.Dir("../emojiart/apple/"))))
@@ -144,6 +139,13 @@ func main() {
 	http.Handle("/images/facebook-messenger/", http.StripPrefix("/images/facebook-messenger/", http.FileServer(http.Dir("../emojiart/facebook-messenger/"))))
 	http.Handle("/images/google/", http.StripPrefix("/images/google/", http.FileServer(http.Dir("../emojiart/google/"))))
 	http.Handle("/images/twitter/", http.StripPrefix("/images/twitter/", http.FileServer(http.Dir("../emojiart/twitter/"))))
+
+	//serve app files
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./build/"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./build/static/"))))
+	http.Handle("/static/css", http.StripPrefix("static/css", http.FileServer(http.Dir("./build/static/css/"))))
+	http.Handle("/static/js", http.StripPrefix("static/js", http.FileServer(http.Dir("./build/static/js/"))))
+	http.Handle("/static/media", http.StripPrefix("static/media", http.FileServer(http.Dir("./build/static/media"))))
 
 	http.ListenAndServe(":8080", nil)
 }
