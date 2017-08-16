@@ -5,25 +5,60 @@ import $ from 'jquery';
 
 class FileForm extends Component {
   render() {
+    console.log(this.props.formData);
     let picture;
     if (this.props.data_uri) {
-      picture = <img src={this.props.data_uri} alt=""/>;
+      picture = <img src={this.props.formData.data_uri} alt=""/>;
     }
-    return (
+    let dimensions;
+    if (this.props.formData.fileHeight && this.props.formData.fileWidth) {
+      let resultWidth, resultHeight;
+      resultHeight = Math.floor(this.props.formData.fileHeight / this.props.formData.squareSize);
+      resultWidth = Math.floor(this.props.formData.fileWidth/ this.props.formData.squareSize);
+      dimensions = resultWidth.toString() + "x" + resultHeight.toString();
+      dimensions = <div>{dimensions}</div>;
+    }
+    let rangeInput;
+    if (this.props.formData.squareSize) {
+      rangeInput = (
       <div>
-        <input type="file" onChange={this.props.handleFile} />
+        <input className="square-size-slider" type="range" min={this.props.formData.min} max={this.props.formData.max} step="1" value={this.props.formData.squareSize} onChange={this.props.onChange} />
+      </div>
+      );
+    }
+
+    return (
+      <div className="side-pane">
+        <label className="custom-file-upload">
+          <input className="input-file" type="file" onChange={this.props.onChange} />
+          Choose an Image
+        </label>
         <br />
-        enter square size<input type="number" onChange={this.props.handleSquareSize} />
+        {dimensions}
+        {rangeInput}
         <br />
-        <input type="radio" value="apple" onChange={this.props.handlePlatform} checked={this.props.platform === "apple"}/>Apple
-        <input type="radio" value="facebook" onChange={this.props.handlePlatform} checked={this.props.platform === "facebook"}/>Facebook
-        <input type="radio" value="twitter" onChange={this.props.handlePlatform} checked={this.props.platform === "twitter"}/>Twitter
-        <input type="radio" value="facebook-messenger" onChange={this.props.handlePlatform} checked={this.props.platform === "facebook-messenger"}/>Facebook Messenger
-        <input type="radio" value="emojione" onChange={this.props.handlePlatform} checked={this.props.platform === "emojione"}/>emojione
+        <div className="radio-buttons">
+          <div>
+            <input type="radio" value="apple" onChange={this.props.onChange} checked={this.props.formData.platform === "apple"}/>Apple
+          </div>
+          <div>
+            <input type="radio" value="google" onChange={this.props.onChange} checked={this.props.formData.platform === "google"}/>Google
+          </div>
+          <div>
+            <input type="radio" value="facebook" onChange={this.props.onChange} checked={this.props.formData.platform === "facebook"}/>Facebook
+          </div>
+          <div>
+            <input type="radio" value="facebook-messenger" onChange={this.props.onChange} checked={this.props.formData.platform === "facebook-messenger"}/>Facebook Messenger
+          </div>
+          <div>
+            <input type="radio" value="twitter" onChange={this.props.onChange} checked={this.props.formData.platform === "twitter"}/>Twitter
+          </div>
+          <div>
+            <input type="radio" value="emojione" onChange={this.props.onChange} checked={this.props.formData.platform === "emojione"}/>emojione
+          </div>
+        </div>
         <br />
-        <input type="button" value="meme" onClick={this.props.onSubmit}/>
-        <br />
-        {picture}
+        <input type="button" value="create" onClick={this.props.onChange}/>
       </div>
     );
   }
@@ -86,109 +121,149 @@ class EmojiGrid extends Component {
 class App extends Component {
   constructor() {
     super();
+    const initData = 
     this.state = {
       emojiMap: null,
-      data_uri: "",
-      filename: "",
-      filetype: "",
-      squareSize: "",
-      platform: "apple",
+      formData: {
+        data_uri: null,
+        filename: null,
+        filetype: null,
+        fileWidth: null,
+        fileHeight: null,
+        squareSize: null,
+        min: null,
+        max: null,
+        platform: "apple",      
+      },
       processing: false,
-    }
-    this.handleSubmit = this.handleSubmit.bind(this)
-    this.handlePlatform = this.handlePlatform.bind(this);
-    this.handleSquareSize = this.handleSquareSize.bind(this);
-    this.handleFile = this.handleFile.bind(this);
-  }
-
-  handleSubmit(event) {
-    console.log("submit");
-    console.log(this.state);
-
-    this.setState({
-      processing: true,
-    });
-
-    const promise = $.ajax({
-      url: "http://localhost:8080/pictoemoji/",
-      type: "POST",
-      data: JSON.stringify({
-        data_uri: this.state.data_uri,
-        filename: this.state.filename,
-        filetype: this.state.filetype,
-        platform: this.state.platform,
-        squaresize: this.state.squareSize,
-      }),
-      dataType: "json",
-    });
-
-    promise.done((data) => {
-      console.log("emoji map", data);
-      this.setState({
-        emojiMap: data,
-      });
-    })
-    .fail((xhr) => {
-      console.log("error", xhr);
-      this.setState({
-        processing: false,
-      });
-    })
-
-  }
-
-  handleFile(event) {
-    const reader = new FileReader();
-    const file = event.target.files[0];
-
-    reader.onload = (upload) => {
-      this.setState({
-        data_uri: upload.target.result,
-        filename: file.name,
-        filetype: file.type
-      });
     };
-
-    reader.readAsDataURL(file);
+    this.handleForm = this.handleForm.bind(this);
   }
 
-  handleSquareSize(event) {
-    const num = parseInt(event.target.value, 10);
-    if(num)
-    {
+  //handles all fields and inputs in fileForm element
+  handleForm(event) {
+    let type = event.target.type;
+    if (type === "file") {
+      const reader = new FileReader();
+      const file = event.target.files[0];
+      //check if file was selected
+      if(file) {
+        let img = new Image();
+        img.onload = () => {
+          //calculate min and max values for range slider
+          //dimensions of output grid should be at least 10x10 and less than 100x100
+          let max, min;
+          if(img.height > img.width) {
+            max = Math.floor(img.width/10);
+            min = Math.ceil(img.width/100);
+          }
+          else {
+            max = Math.floor(img.height/10);
+            min = Math.ceil(img.height/100);
+          }
+
+          let formData = this.state.formData;
+          formData.fileWidth = img.width;
+          formData.fileHeight = img.height;
+          formData.min = min;
+          formData.max = max;
+          formData.squareSize = Math.floor((max+min)/2);
+          this.setState({
+            formData: formData,
+          })
+        }
+
+        reader.onload = (upload) => {
+          img.src = upload.target.result;
+          let formData = this.state.formData;
+          formData.data_uri = upload.target.result;
+          formData.filename = file.name;
+          formData.filetype = file.type;
+          this.setState({
+            formData: formData,
+          });
+        };
+
+        reader.readAsDataURL(file);
+      }
+    }
+    else if (type === "range") {
+      console.log("square size = ", this.state.formData.squareSize);
+      const num = event.target.value
+      if(num) {
+        let formData = this.state.formData;
+        formData.squareSize = num;
+        this.setState({
+          formData: formData,
+        });
+      }
+    }
+    else if (type === "radio") {
+      const platform = event.target.value;
+      console.log(platform);
+      let formData = this.state.formData;
+      formData.platform = platform;
       this.setState({
-        squareSize: num,
+        formData: formData,
       });
     }
-  }
+    else if (type === "button") {
+      //submit form data to server
+      this.setState({
+        processing: true,
+      });
 
-  handlePlatform(event) {
-    console.log(this.state);
-    const platform = event.target.value;
-    console.log(platform);
-    this.setState({
-      platform: platform,
-    });
+      let parsedSquareSize = parseInt(this.state.formData.squareSize, 10);
+      const promise = $.ajax({
+        url: "http://localhost:8080/pictoemoji/",
+        type: "POST",
+        data: JSON.stringify({
+          data_uri: this.state.formData.data_uri,
+          filename: this.state.formData.filename,
+          filetype: this.state.formData.filetype,
+          platform: this.state.formData.platform,
+          squaresize: parsedSquareSize,
+        }),
+        dataType: "json",
+      });
+
+      promise.done((data) => {
+        console.log("emoji map", data);
+        this.setState({
+          emojiMap: data,
+          processing: false,
+        });
+      })
+      .fail((xhr) => {
+        console.log("error", xhr);
+        this.setState({
+          processing: false,
+        });
+      })
+    }
   }
 
   render() {
-    let currentScreen;
-    if (this.state.emojiMap) {
-      currentScreen = <EmojiGrid emojiMap={this.state.emojiMap}/>
+    let emojiGrid;
+    if(this.state.emojiMap) {
+      emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
     }
-    else if (this.state.processing) {
-      currentScreen = <div>processing</div>
-    }
-    else {
-      currentScreen = <FileForm onSubmit={this.handleSubmit} handleFile={this.handleFile} handleSquareSize={this.handleSquareSize} handlePlatform={this.handlePlatform} platform={this.state.platform} data_uri={this.state.data_uri}/>
-    }
+
+    console.log(this.state.formData);
+
     return (
       <div className="App">
         <div className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
+          <h2>Emojify</h2>
         </div>
-        {currentScreen}
+        <div className="App-body">
+          <FileForm
+            formData={this.state.formData}
+            onChange={this.handleForm}
+          />
+          {emojiGrid}
+        </div>
       </div>
     );
   }

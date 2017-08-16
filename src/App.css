@@ -14,6 +14,11 @@
   color: white;
 }
 
+.App-body {
+  display: flex;
+  flex-direction: row;
+}
+
 .App-intro {
   font-size: large;
 }
@@ -31,4 +36,31 @@
 .emoji-grid-row {
   display: flex;
   flex-direction: row;
+}
+
+.square-size-slider {
+  direction: rtl;
+}
+
+.side-pane {
+  background-color: lightblue;
+  width: 200px;
+  height: 100%;
+}
+
+.input-file {
+  display: none;
+}
+
+.custom-file-upload {
+  border: 1px solid #000;
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.radio-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
