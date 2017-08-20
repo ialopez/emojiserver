@@ -3,6 +3,9 @@ import logo from './logo.svg';
 import './App.css';
 import $ from 'jquery';
 
+var domain = "http://localhost:8080";
+
+//form to collect image from user and other options
 class FileForm extends Component {
   render() {
     console.log(this.props.formData);
@@ -28,7 +31,7 @@ class FileForm extends Component {
     }
 
     return (
-      <div className="side-pane">
+      <div>
         <label className="custom-file-upload">
           <input className="input-file" type="file" onChange={this.props.onChange} />
           Choose an Image
@@ -115,6 +118,185 @@ class EmojiGrid extends Component {
         </div>
       </div>
     );
+  }
+}
+
+/*
+//draws json object received from server as a grid of emojis
+class EmojiCanvas extends Component {
+  constructor(props) {
+    super(props);
+    //state contains height, and width fields
+    this.state = this.calcHeightWidth();
+    this.drawCanvas = this.drawCanvas.bind(this);
+    this.calcHeightWidth = this.calcHeightWidth.bind(this);
+  }
+
+  calcHeightWidth() {
+    //find height and width of canvas
+    let height, width;
+    //the longest side of the image is limited to 1000px, calculate width or height needed to maintain original ratio of image
+    if(this.props.emojiMap.mapping.length > this.props.emojiMap.mapping[0].length) {
+      //height is larger than width
+      height = 1000;
+      width = 1000 * (this.props.emojiMap.mapping[0].length / this.props.emojiMap.mapping.length);
+    }
+    else {
+      //width is larger than height
+      width = 1000;
+      height = 1000 * (this.props.emojiMap.mapping.length / this.props.emojiMap.mapping[0].length);
+    }
+
+    return {
+      width: width,
+      height: height,
+    };
+  }
+
+  componentDidMount() {
+    console.log("component mounted");
+    this.drawCanvas();
+  }
+
+  drawCanvas() {
+    console.log("download button clicked");
+    //create canvas element
+    const ctx = this.refs.canvas.getContext("2d");
+
+    //calculate size of each emoji to fit into height and width of canvas
+    const imgLength = this.state.height / this.props.emojiMap.mapping.length;
+    console.log(this.state);
+
+    //follow similar procedure in emojigrid, download emojis and build result on canvas using emojiMap
+    const imageLib = {};
+
+    //draw images onto canvas
+    let createImage = () => {
+      let y = 0;
+      for(let i = 0; i < this.props.emojiMap.mapping.length; i++) {
+        let x = 0;
+        for(let j = 0; j < this.props.emojiMap.mapping[0].length; j++) {
+          const index = this.props.emojiMap.mapping[i][j];
+          const img = imageLib[index];
+          ctx.drawImage(img, x, y, imgLength, imgLength);
+          console.log("x = ", x, "y = ", y);
+          x += imgLength;
+        }
+        y += imgLength;
+      }
+    };
+
+    //load images from server required call create image when done
+    let prop;
+    let imgCount = 0;
+    for(prop in this.props.emojiMap.dictionary) {
+      const img = new Image();
+      img.onload = () => {
+        //increase number of images loaded so far it is equal to the length of the dictionary then call createImage()
+        imgCount++;
+        if(imgCount === Object.keys(this.props.emojiMap.dictionary).length) {
+          createImage();
+        }
+      };
+
+      img.src = domain + "/" + this.props.emojiMap.dictionary[prop];
+      //add image to image library
+      imageLib[prop] = img;
+    }
+  }
+
+  render() {
+    return (
+      <div>
+        <canvas ref="canvas" width={this.state.width} height={this.state.height} />
+      </div>
+    );
+  }
+}
+*/
+
+//features options for emoji grid such as downloading image 
+class EmojiGridOptions extends Component {
+  constructor() {
+    super();
+    this.state = {
+      href: null,
+    };
+  }
+
+  componentDidMount() {
+    //create canvas element
+    const ctx = this.refs.canvas.getContext("2d");
+
+    //follow similar procedure in emojigrid, download emojis and build result on canvas using emojiMap
+    const imageLib = {};
+
+    //emoji images are 64x64 px
+    const emojiLength = 64;
+    //draw images onto canvas
+    let createImage = () => {
+      //first draw a white background on canvas
+      ctx.fillStyle="#FFFFFF";
+      ctx.fillRect(0, 0, this.refs.canvas.width, this.refs.canvas.height);
+
+      //draw emojis ontop of white layer
+      let y = 0;
+      for(let i = 0; i < this.props.emojiMap.mapping.length; i++) {
+        let x = 0;
+        for(let j = 0; j < this.props.emojiMap.mapping[0].length; j++) {
+          const index = this.props.emojiMap.mapping[i][j];
+          const img = imageLib[index];
+          ctx.drawImage(img, x, y);
+          console.log("x = ", x, "y = ", y);
+          x += emojiLength;
+        }
+        y += emojiLength;
+      }
+      //return image in as a data string
+      this.setState({
+        href: this.refs.canvas.toDataURL(),
+      });
+    };
+
+    //load images needed from server, call create image when done
+    let prop;
+    let imgCount = 0;
+    for(prop in this.props.emojiMap.dictionary) {
+      const img = new Image();
+      img.onload = () => {
+        //increase number of images loaded so far it is equal to the length of the dictionary then call createImage()
+        imgCount++;
+        if(imgCount === Object.keys(this.props.emojiMap.dictionary).length) {
+          createImage();
+        }
+      };
+
+      img.src = domain + "/" + this.props.emojiMap.dictionary[prop];
+      //add image to image library
+      imageLib[prop] = img;
+    }
+  }
+
+  render() {
+    let canvas, download;
+    if (this.state.href) {
+      download = (
+        <a href={this.state.href} download="output.png">
+          Download
+        </a>
+      );
+    }
+    else {
+      //note 64x64 is the dimensions of an emoji received from the server
+      canvas = <canvas className="invisible-canvas" ref="canvas" height={this.props.emojiMap.mapping.length*64} width={this.props.emojiMap.mapping[0].length*64} />;
+    }
+
+    return (
+      <div>
+        {download}
+        {canvas}
+      </div>
+    )
   }
 }
 
@@ -215,7 +397,7 @@ class App extends Component {
 
       let parsedSquareSize = parseInt(this.state.formData.squareSize, 10);
       const promise = $.ajax({
-        url: "http://localhost:8080/pictoemoji/",
+        url: domain + "/pictoemoji/",
         type: "POST",
         data: JSON.stringify({
           data_uri: this.state.formData.data_uri,
@@ -244,10 +426,12 @@ class App extends Component {
   }
 
   render() {
-    let emojiGrid;
+    let emojiGrid, emojiOptions;
     if(this.state.emojiMap) {
       emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
+      emojiOptions = <EmojiGridOptions emojiMap={this.state.emojiMap}/>;
     }
+
 
     console.log(this.state.formData);
 
@@ -258,10 +442,13 @@ class App extends Component {
           <h2>Emojify</h2>
         </div>
         <div className="App-body">
-          <FileForm
+          <div className="side-pane">
+            <FileForm
             formData={this.state.formData}
             onChange={this.handleForm}
-          />
+            />
+            {emojiOptions}
+          </div>
           {emojiGrid}
         </div>
       </div>

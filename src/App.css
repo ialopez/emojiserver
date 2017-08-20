@@ -64,3 +64,7 @@
   flex-direction: column;
   align-items: flex-start;
 }
+
+.invisible-canvas {
+  display: none;
+}
