@@ -252,10 +252,18 @@ class EmojiGridOptions extends Component {
         }
         y += emojiLength;
       }
-      //return image in as a data string
-      this.setState({
-        href: this.refs.canvas.toDataURL(),
+      //turn image from canvas into a dataURL
+      this.refs.canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        this.setState({
+          href: url,
+        });
       });
+
+      //data is in the format "data:image/png;base64,.....", modify it to "data:application/octet-stream;base64,.......", else it doesn't work on chrome
+      //data = data.slice(data.indexOf(';'), -1);
+      //data = "data:application/octet-stream" + data;
+
     };
 
     //load images needed from server, call create image when done
@@ -277,11 +285,16 @@ class EmojiGridOptions extends Component {
     }
   }
 
+  componentWillUnmount() {
+    //free up object url made for download link
+    URL.revokeObjectURL(this.state.href);
+  }
+
   render() {
     let canvas, download;
     if (this.state.href) {
       download = (
-        <a href={this.state.href} download="output.png">
+        <a href={this.state.href} download="download.png">
           Download
         </a>
       );
@@ -429,11 +442,11 @@ class App extends Component {
     let emojiGrid, emojiOptions;
     if(this.state.emojiMap) {
       emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
+    }
+    if(this.state.emojiMap && !this.state.processing) {
       emojiOptions = <EmojiGridOptions emojiMap={this.state.emojiMap}/>;
     }
 
-
-    console.log(this.state.formData);
 
     return (
       <div className="App">
