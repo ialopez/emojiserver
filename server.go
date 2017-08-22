@@ -1,93 +1,19 @@
 package main
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt" //reader writer
 	"github.com/ialopez/emojiart"
-	"html/template"
 	"image"
 	_ "image/jpeg"
-	"image/png"
-	"io"        //used to write read files
-	"io/ioutil" //read files
-	"log"
+	_ "image/png"
 	"net/http" //used to handle serve http requests
-	"os"       //used to create files in server
-	"strconv"
 	"strings"
 )
 
-var indexPage, _ = ioutil.ReadFile("./main.html/") //read in app starting point from index.html
-var resultPage = template.Must(template.ParseFiles("./result.html"))
-
-func openPNG(path string) image.Image {
-	file, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pic, err := png.Decode(file)
-	if err != nil {
-		fmt.Println("cannot decode")
-		log.Fatal(err)
-	}
-	return pic
-}
-
-//serve main page
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./build/index.html")
-}
-
-//serve result page, seen after submitting picture to server
-func resultHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(32 << 20)
-	//get file and handler that was submitted to server
-	file, handler, err := r.FormFile("pic")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	squareSize, err := strconv.Atoi(r.FormValue("squareSize"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	platform := r.FormValue("platform")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	f, err := os.OpenFile("./"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer f.Close()
-	io.Copy(f, file)
-	img := openPNG("./" + handler.Filename)
-	picToEmoji := emojiart.NewPicToEmoji(squareSize, platform, false, img)
-	resultImg := picToEmoji.CreateEmojiArt()
-
-	buffer := new(bytes.Buffer)
-	err = png.Encode(buffer, resultImg)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	title := handler.Filename
-	str := base64.StdEncoding.EncodeToString(buffer.Bytes())
-	data := map[string]string{"Image": str, "Title": title}
-	err = resultPage.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
+/*images from users are sent to this handler to create emoji image, the result is a json object
+that the users browser will use to render the final result
+*/
 func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 	//create struct to represent json object from http request
 	type fileInfo struct {
@@ -104,8 +30,8 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&fi)
 
-	//decode image from string representation
-	//cut off "data:image/png;base64," prefix
+	//decode image from data_uri
+	//cut off "data:image/png;base64," prefix before decoding
 	imageData := fi.Data_uri[strings.IndexByte(fi.Data_uri, ',')+1:]
 	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imageData))
 	img, _, err := image.Decode(reader)
@@ -114,10 +40,12 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//create a picToEmoji object, this stores the image and parameters needed to create image
 	picToEmoji := emojiart.NewPicToEmoji(fi.SquareSize, fi.Platform, false, img)
-
+	//run the algorithm to create image, returns a struct
 	resultMap := picToEmoji.CreateEmojiArtMap()
 
+	//turn struct into json response
 	err = json.NewEncoder(w).Encode(resultMap)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -126,10 +54,9 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//initialize emoji dictionarie
+	//initialize emoji dictionary
 	emojiart.InitEmojiDictAvg()
 
-	http.HandleFunc("/view/", resultHandler)
 	http.HandleFunc("/pictoemoji/", picToEmojiHandler)
 
 	//serve emoji images
