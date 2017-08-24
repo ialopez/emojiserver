@@ -2,17 +2,13 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import $ from 'jquery';
+import ReactLoading from 'react-loading';
 
 var domain = "http://localhost:8080";
 
 //form to collect image from user and other parameters
 class FileForm extends Component {
   render() {
-    console.log(this.props.formData);
-    let picture;
-    if (this.props.data_uri) {
-      picture = <img src={this.props.formData.data_uri} alt=""/>;
-    }
     let dimensions;
     if (this.props.formData.fileHeight && this.props.formData.fileWidth) {
       let resultWidth, resultHeight;
@@ -132,11 +128,16 @@ class ImageDownload extends Component {
     super();
     this.state = {
       href: null,
+      creatingLink: false,
     };
   }
 
   componentDidMount() {
-    //create canvas element
+    this.setState({
+      creatingLink: true,
+    });
+
+    //get canvas element
     const ctx = this.refs.canvas.getContext("2d");
 
     //follow similar procedure in emojigrid, download emojis and build result on canvas using emojiMap
@@ -168,6 +169,7 @@ class ImageDownload extends Component {
         const url = URL.createObjectURL(blob);
         this.setState({
           href: url,
+          creatingLink: false,
         });
       });
 
@@ -202,12 +204,19 @@ class ImageDownload extends Component {
   }
 
   render() {
-    let canvas, download;
+    let canvas, download, loading;
     if (this.state.href) {
       download = (
         <a href={this.state.href} download="download.png">
           <button>Download</button>
         </a>
+      );
+    }
+    if (this.state.creatingLink) {
+      loading = (
+        <div className="loading">
+          <ReactLoading type="bubbles" color="#444" />
+        </div>
       );
     }
     else {
@@ -217,6 +226,7 @@ class ImageDownload extends Component {
 
     return (
       <div>
+        {loading}
         {download}
         {canvas}
       </div>
@@ -345,14 +355,16 @@ class App extends Component {
   }
 
   render() {
-    let emojiGrid, download;
+    let emojiGrid, download, loading;
     if(this.state.emojiMap) {
       emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
     }
     if(this.state.emojiMap && !this.state.processing) {
       download = <ImageDownload emojiMap={this.state.emojiMap}/>;
     }
-
+    if(this.state.processing) {
+      loading = <ReactLoading type="bubbles" color="#444" />
+    }
 
     return (
       <div className="App">
@@ -368,6 +380,7 @@ class App extends Component {
             />
             {download}
           </div>
+          {loading}
           {emojiGrid}
         </div>
       </div>

@@ -41,7 +41,7 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//create a picToEmoji object, this stores the image and parameters needed to create image
-	picToEmoji := emojiart.NewPicToEmoji(fi.SquareSize, fi.Platform, false, img)
+	picToEmoji := emojiart.NewPicToEmoji(fi.SquareSize, fi.Platform, img)
 	//run the algorithm to create image, returns a struct
 	resultMap := picToEmoji.CreateEmojiArtMap()
 
