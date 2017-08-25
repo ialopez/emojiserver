@@ -128,15 +128,10 @@ class ImageDownload extends Component {
     super();
     this.state = {
       href: null,
-      creatingLink: false,
     };
   }
 
   componentDidMount() {
-    this.setState({
-      creatingLink: true,
-    });
-
     //get canvas element
     const ctx = this.refs.canvas.getContext("2d");
 
@@ -169,7 +164,6 @@ class ImageDownload extends Component {
         const url = URL.createObjectURL(blob);
         this.setState({
           href: url,
-          creatingLink: false,
         });
       });
 
@@ -212,16 +206,14 @@ class ImageDownload extends Component {
         </a>
       );
     }
-    if (this.state.creatingLink) {
+    else {
+      //note 64x64 is the dimensions of an emoji received from the server
+      canvas = <canvas className="invisible-canvas" ref="canvas" height={this.props.emojiMap.mapping.length*64} width={this.props.emojiMap.mapping[0].length*64} />;
       loading = (
         <div className="loading">
           <ReactLoading type="bubbles" color="#444" />
         </div>
       );
-    }
-    else {
-      //note 64x64 is the dimensions of an emoji received from the server
-      canvas = <canvas className="invisible-canvas" ref="canvas" height={this.props.emojiMap.mapping.length*64} width={this.props.emojiMap.mapping[0].length*64} />;
     }
 
     return (
@@ -356,16 +348,13 @@ class App extends Component {
 
   render() {
     let emojiGrid, download, loading;
-    if(this.state.emojiMap) {
-      emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
-    }
-    if(this.state.emojiMap && !this.state.processing) {
-      download = <ImageDownload emojiMap={this.state.emojiMap}/>;
-    }
     if(this.state.processing) {
       loading = <ReactLoading type="bubbles" color="#444" />
     }
-
+    else if(this.state.emojiMap) {
+      emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
+      download = <ImageDownload emojiMap={this.state.emojiMap}/>;
+    }
     return (
       <div className="App">
         <div className="App-header">
