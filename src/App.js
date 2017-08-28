@@ -5,6 +5,7 @@ import $ from 'jquery';
 import ReactLoading from 'react-loading';
 
 var domain = "http://localhost:8080";
+var debug = true; //set to true if testing with npm start else ImageDownload button crashes app
 
 //form to collect image from user and other parameters
 class FileForm extends Component {
@@ -27,7 +28,7 @@ class FileForm extends Component {
     }
 
     return (
-      <div>
+      <div className="form">
         <label className="custom-file-upload">
           <input className="input-file" type="file" onChange={this.props.onChange} />
           Choose an Image
@@ -36,26 +37,14 @@ class FileForm extends Component {
         {dimensions}
         {rangeInput}
         <br />
-        <div className="radio-buttons">
-          <div>
-            <input type="radio" value="apple" onChange={this.props.onChange} checked={this.props.formData.platform === "apple"}/>Apple
-          </div>
-          <div>
-            <input type="radio" value="google" onChange={this.props.onChange} checked={this.props.formData.platform === "google"}/>Google
-          </div>
-          <div>
-            <input type="radio" value="facebook" onChange={this.props.onChange} checked={this.props.formData.platform === "facebook"}/>Facebook
-          </div>
-          <div>
-            <input type="radio" value="facebook-messenger" onChange={this.props.onChange} checked={this.props.formData.platform === "facebook-messenger"}/>Facebook Messenger
-          </div>
-          <div>
-            <input type="radio" value="twitter" onChange={this.props.onChange} checked={this.props.formData.platform === "twitter"}/>Twitter
-          </div>
-          <div>
-            <input type="radio" value="emojione" onChange={this.props.onChange} checked={this.props.formData.platform === "emojione"}/>emojione
-          </div>
-        </div>
+        <select value={this.props.formData.platform} onChange={this.props.onChange}>
+          <option value="apple">Apple</option>
+          <option value="google">Google</option>
+          <option value="facebook">Facebook</option>
+          <option value="facebook-messenger">Facebook Messenger</option>
+          <option value="twitter">Twitter</option>
+          <option value="emojione">Emojione</option>
+        </select>
         <br />
         <button onClick={this.props.onChange}>
           create
@@ -353,7 +342,9 @@ class App extends Component {
     }
     else if(this.state.emojiMap) {
       emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
-      download = <ImageDownload emojiMap={this.state.emojiMap}/>;
+      if(!debug) {
+        download = <ImageDownload emojiMap={this.state.emojiMap}/>;
+      }
     }
     return (
       <div className="App">
@@ -362,7 +353,7 @@ class App extends Component {
           <h2>Emojify</h2>
         </div>
         <div className="App-body">
-          <div className="side-pane">
+          <div className="options-box">
             <FileForm
             formData={this.state.formData}
             onChange={this.handleForm}
