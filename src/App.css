@@ -9,14 +9,15 @@
 
 .App-header {
   background-color: #222;
-  height: 150px;
+  height: 100px;
   padding: 20px;
   color: white;
 }
 
 .App-body {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  align-items: center;
 }
 
 .App-intro {
@@ -28,48 +29,10 @@
   to { transform: rotate(360deg); }
 }
 
-.emoji-grid {
-  display: flex;
-  flex-direction: column;
-}
 
-.emoji-grid-row {
-  display: flex;
-  flex-direction: row;
-}
 
-.square-size-slider {
-  direction: rtl;
-}
-
-.side-pane {
-  background-color: lightblue;
-  width: 200px;
-  height: 100%;
-}
-
-.input-file {
-  display: none;
-}
-
-.custom-file-upload {
-  border: 1px solid #000;
-  display: inline-block;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-
-.radio-buttons {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.invisible-canvas {
-  display: none;
-}
-
-.loading {
-  display: flex;
-  align-items: center;
+.options-box {
+  background-color: lightgray;
+  width: 800px;
+  margin: 20px;
 }

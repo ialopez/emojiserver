@@ -1,0 +1,12 @@
+.square-size-slider {
+  direction: rtl;
+}
+
+.form {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: auto;
+  padding: 20px;
+}
