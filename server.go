@@ -7,9 +7,47 @@ import (
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
+	"log"
+	"math/rand"
 	"net/http" //used to handle serve http requests
+	"os"
 	"strings"
 )
+
+var examples []string
+
+/*get json files in /examples/ directory and save them to examples var
+ */
+func initExamples() {
+	//open folder
+	folder, err := os.Open("./examples/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer folder.Close()
+
+	//count files in folder should be less than ten
+	names, err := folder.Readdirnames(10)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//allocate examples var
+	examples = make([]string, len(names))
+
+	//for each file read its contents and save it in examples var
+	for i := 0; i < len(names); i++ {
+		examples[i] = "./examples/" + names[i]
+	}
+}
+
+/*serve up a random emoji art example from examples folder
+ */
+func examplesHandler(w http.ResponseWriter, r *http.Request) {
+	randNumber := rand.Float32()
+	index := int(randNumber * float32(len(examples)))
+	http.ServeFile(w, r, examples[index])
+}
 
 /*images from users are sent to this handler to create emoji image, the result is a json object
 that the users browser will use to render the final result
@@ -56,8 +94,11 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//initialize emoji dictionary
 	emojiart.InitEmojiDictAvg()
+	//init example pictures
+	initExamples()
 
 	http.HandleFunc("/pictoemoji/", picToEmojiHandler)
+	http.HandleFunc("/examples/", examplesHandler)
 
 	//serve emoji images
 	http.Handle("/images/apple/", http.StripPrefix("/images/apple/", http.FileServer(http.Dir("../emojiart/apple/"))))

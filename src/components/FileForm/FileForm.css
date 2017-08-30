@@ -2,11 +2,33 @@
   direction: rtl;
 }
 
+.dimensions-text {
+  font-weight: bold;
+}
+
 .form {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: center;  
   width: auto;
   padding: 20px;
+}
+
+@media (max-width: 500px) {
+  .form {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .form-item {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .form-item {
+    margin-left: 20px;
+    margin-right: 20px; 
+  }
 }

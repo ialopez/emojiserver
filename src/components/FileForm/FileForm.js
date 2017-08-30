@@ -11,7 +11,7 @@ class FileForm extends Component {
       resultHeight = Math.floor(this.props.formData.fileHeight / this.props.formData.squareSize);
       resultWidth = Math.floor(this.props.formData.fileWidth/ this.props.formData.squareSize);
       dimensions = resultWidth.toString() + "x" + resultHeight.toString();
-      dimensions = <div>{dimensions}</div>;
+      dimensions = <div className="dimensions-text">{dimensions}</div>;
     }
     let rangeInput;
     if (this.props.formData.squareSize) {
@@ -24,26 +24,31 @@ class FileForm extends Component {
 
     return (
       <div className="form">
-        <FormControl
+        <span className="form-item">
+          <FormControl
           type="file"
           onChange={this.props.onChange}
-        />
-        <br />
-        {dimensions}
-        {rangeInput}
-        <br />
-        <DropdownButton bsStyle="default" title={this.props.formData.platform} onSelect={this.props.onChange}>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "apple"}}}>Apple</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "google"}}}>Google</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "facebook"}}}>Facebook</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "facebook-messenger"}}}>Facebook-Messenger</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "twitter"}}}>Twitter</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "emojione"}}}>Emojione</MenuItem>
-        </DropdownButton>
-        <br />
-        <Button onClick={this.props.onChange}>
-          create
-        </Button>
+          />
+        </span>
+        <span className="form-item">
+          {dimensions}
+          {rangeInput}
+        </span>
+        <span className="form-item">
+          <DropdownButton bsStyle="default" title={this.props.formData.platform} onSelect={this.props.onChange}>
+            <MenuItem eventKey={{target: {type: "dropdown", value: "apple"}}}>Apple</MenuItem>
+            <MenuItem eventKey={{target: {type: "dropdown", value: "google"}}}>Google</MenuItem>
+            <MenuItem eventKey={{target: {type: "dropdown", value: "facebook"}}}>Facebook</MenuItem>
+            <MenuItem eventKey={{target: {type: "dropdown", value: "facebook-messenger"}}}>Facebook-Messenger</MenuItem>
+            <MenuItem eventKey={{target: {type: "dropdown", value: "twitter"}}}>Twitter</MenuItem>
+            <MenuItem eventKey={{target: {type: "dropdown", value: "emojione"}}}>Emojione</MenuItem>
+          </DropdownButton>
+        </span>
+        <span className="form-item">
+          <Button onClick={this.props.onChange}>
+            create
+          </Button>
+        </span>
       </div>
     );
   }

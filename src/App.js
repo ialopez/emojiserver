@@ -8,7 +8,7 @@ import EmojiGrid from './components/EmojiGrid/EmojiGrid';
 import ImageDownload from './components/ImageDownload/ImageDownload';
 
 const domain = "http://localhost:8080";
-const debug = false; //set to true if testing with npm start else ImageDownload button crashes app
+const debug = true; //set to true if testing with npm start else ImageDownload button crashes app
 
 class App extends Component {
   constructor() {
@@ -28,6 +28,32 @@ class App extends Component {
       processing: false,
     };
     this.handleForm = this.handleForm.bind(this);
+  }
+
+  //request example picture from /examples/ server api
+  componentDidMount() {
+    this.setState({
+      processing: true,
+    });
+    $.ajax({
+      url: domain + "/examples/",
+      type: "GET",
+      cache: false,
+      dataType: "json",
+    })
+    .done((data) => {
+      console.log("emoji map", data);
+      this.setState({
+        emojiMap: data,
+        processing: false,
+      });
+    })
+    .fail((xhr) => {
+      console.log("error", xhr);
+      this.setState({
+        processing: false,
+      });
+    })
   }
 
   //handles all fields and inputs in fileForm element
@@ -116,6 +142,7 @@ class App extends Component {
 
       promise.done((data) => {
         console.log("emoji map", data);
+        console.log(JSON.stringify(data));
         this.setState({
           emojiMap: data,
           processing: false,
