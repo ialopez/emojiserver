@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactLoading from 'react-loading';
 import './ImageDownload.css';
 
+//const domain = "http://emojify.fun";
 const domain = "http://localhost:8080";
 
 /*create a download link for user to download image rendered to emojiGrid as a png file

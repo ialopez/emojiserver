@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/hashicorp/golang-lru"
 	"github.com/ialopez/emojiart"
 	"image"
 	_ "image/jpeg"
@@ -15,6 +16,17 @@ import (
 )
 
 var examples []string
+var cachedImages *lru.Cache
+
+const MAX_CACHED_IMG_COUNT = 15
+
+//create struct to represent json object from http request
+type userData struct {
+	Data_uri   string `json:"data_uri"`
+	Hash       string `json:"hash"`
+	Platform   string `json:"platform"`
+	SquareSize int    `json:"squaresize"`
+}
 
 /*get json files in /examples/ directory and save them to examples var
  */
@@ -49,28 +61,56 @@ func examplesHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, examples[index])
 }
 
+/*check if image is cached, return 404 if not found
+ */
+func picToEmojiCachedHandler(w http.ResponseWriter, r *http.Request) {
+	var ud userData
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&ud)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	key := ud.Hash
+	element, ok := cachedImages.Get(key)
+	if !ok {
+		http.Error(w, "image not found", http.StatusNotFound)
+		return
+	}
+	img := element.(*image.NRGBA)
+
+	//create a picToEmoji object, this stores the image and parameters needed to create image
+	picToEmoji := emojiart.NewPicToEmoji(ud.SquareSize, ud.Platform, img)
+	//run the algorithm to create image, returns a struct
+	resultMap := picToEmoji.CreateEmojiArtMap()
+
+	//turn struct into json response
+	err = json.NewEncoder(w).Encode(resultMap)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+}
+
 /*images from users are sent to this handler to create emoji image, the result is a json object
 that the users browser will use to render the final result
 */
 func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
-	//create struct to represent json object from http request
-	type fileInfo struct {
-		Data_uri   string `json:"data_uri"`
-		Filename   string `json:"filename"`
-		Filetype   string `json:"filetype"`
-		Platform   string `json:"platform"`
-		SquareSize int    `json:"squaresize"`
-	}
-
-	var fi fileInfo
+	var ud userData
 
 	//decode json from the http request body and store it in a fileInfo struct
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&fi)
+	err := decoder.Decode(&ud)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	//decode image from data_uri
 	//cut off "data:image/png;base64," prefix before decoding
-	imageData := fi.Data_uri[strings.IndexByte(fi.Data_uri, ',')+1:]
+	imageData := ud.Data_uri[strings.IndexByte(ud.Data_uri, ',')+1:]
 	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imageData))
 	img, _, err := image.Decode(reader)
 	if err != nil {
@@ -79,9 +119,13 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//create a picToEmoji object, this stores the image and parameters needed to create image
-	picToEmoji := emojiart.NewPicToEmoji(fi.SquareSize, fi.Platform, img)
+	picToEmoji := emojiart.NewPicToEmoji(ud.SquareSize, ud.Platform, img)
 	//run the algorithm to create image, returns a struct
 	resultMap := picToEmoji.CreateEmojiArtMap()
+
+	//save image to cached images
+	key := ud.Hash
+	go cachedImages.Add(key, img)
 
 	//turn struct into json response
 	err = json.NewEncoder(w).Encode(resultMap)
@@ -96,8 +140,11 @@ func main() {
 	emojiart.InitEmojiDictAvg()
 	//init example pictures
 	initExamples()
+	//init lru cache
+	cachedImages, _ = lru.New(MAX_CACHED_IMG_COUNT)
 
 	http.HandleFunc("/pictoemoji/", picToEmojiHandler)
+	http.HandleFunc("/pictoemojicached/", picToEmojiCachedHandler)
 	http.HandleFunc("/examples/", examplesHandler)
 
 	//serve emoji images

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "crypto-js": "^3.1.9-1",
     "jquery": "^3.2.1",
     "react": "^15.6.1",
     "react-bootstrap": "^0.31.2",

@@ -2,11 +2,13 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import $ from 'jquery';
+import CryptoJS from 'crypto-js'
 import ReactLoading from 'react-loading';
 import FileForm from './components/FileForm/FileForm';
 import EmojiGrid from './components/EmojiGrid/EmojiGrid';
 import ImageDownload from './components/ImageDownload/ImageDownload';
 
+//const domain = "http://emojify.fun";
 const domain = "http://localhost:8080";
 const debug = true; //set to true if testing with npm start else ImageDownload button crashes app
 
@@ -23,7 +25,7 @@ class App extends Component {
         squareSize: null,
         min: null,
         max: null,
-        platform: "apple",      
+        platform: "apple",
       },
       processing: false,
     };
@@ -94,6 +96,9 @@ class App extends Component {
           img.src = upload.target.result;
           let formData = this.state.formData;
           formData.data_uri = upload.target.result;
+          //get md5 of file, save it to this.key, this.state should not be used if it doesn't contain data to render
+          this.hash = CryptoJS.MD5(upload.target.result).toString(CryptoJS.enc.Base64);
+          console.log(this.hash);
           this.setState({
             formData: formData,
           });
@@ -128,33 +133,59 @@ class App extends Component {
         processing: true,
       });
 
+      //see if image is cached on server first
       let parsedSquareSize = parseInt(this.state.formData.squareSize, 10);
-      const promise = $.ajax({
-        url: domain + "/pictoemoji/",
+
+      $.ajax({
+        url: domain + "/pictoemojicached/",
         type: "POST",
         data: JSON.stringify({
-          data_uri: this.state.formData.data_uri,
           platform: this.state.formData.platform,
           squaresize: parsedSquareSize,
+          hash: this.hash,
         }),
         dataType: "json",
-      });
-
-      promise.done((data) => {
+      })
+      .done((data) => {
         console.log("emoji map", data);
-        console.log(JSON.stringify(data));
         this.setState({
           emojiMap: data,
           processing: false,
         });
+        console.log("cache successful");
       })
       .fail((xhr) => {
-        console.log("error", xhr);
-        this.setState({
-          processing: false,
+        //if previous ajax request failed send image
+        const promise = $.ajax({
+          url: domain + "/pictoemoji/",
+          type: "POST",
+          data: JSON.stringify({
+            data_uri: this.state.formData.data_uri,
+            platform: this.state.formData.platform,
+            squaresize: parsedSquareSize,
+            hash: this.hash,
+          }),
+          dataType: "json",
         });
-      })
-    }
+
+        promise.done((data) => {
+          console.log("emoji map", data);
+          this.setState({
+            emojiMap: data,
+            processing: false,
+          });
+          console.log("cache miss");
+          
+        })
+        .fail((xhr) => {
+          console.log("error", xhr);
+          this.setState({
+            processing: false,
+          });
+        })
+        }
+        );
+      }
   }
 
   render() {

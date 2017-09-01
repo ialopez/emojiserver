@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './EmojiGrid.css';
 
+//const domain = "http://emojify.fun";
 const domain = "http://localhost:8080";
 
 /*renders the json object/emoji map object received from the server a a grid of images
