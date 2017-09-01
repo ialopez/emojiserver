@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"github.com/hashicorp/golang-lru"
 	"github.com/ialopez/emojiart"
 	"image"
@@ -136,8 +137,11 @@ func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//parse flags
+	recalculateEmojiDict := flag.Bool("recDict", false, "recalculate emoji dictionary from scratch or use emoji dict json file, false by default")
+
 	//initialize emoji dictionary
-	emojiart.InitEmojiDictAvg()
+	emojiart.InitEmojiDictAvg(*recalculateEmojiDict)
 	//init example pictures
 	initExamples()
 	//init lru cache
