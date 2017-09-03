@@ -142,6 +142,8 @@ func main() {
 
 	//initialize emoji dictionary
 	emojiart.InitEmojiDictAvg(*recalculateEmojiDict)
+	//init num of threads for algorithm to use
+	emojiart.InitNumOfThreads()
 	//init example pictures
 	initExamples()
 	//init lru cache
