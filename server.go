@@ -141,7 +141,7 @@ func main() {
 	recalculateEmojiDict := flag.Bool("recDict", false, "recalculate emoji dictionary from scratch or use emoji dict json file, false by default")
 
 	//initialize emoji dictionary
-	emojiart.InitEmojiDictAvg(*recalculateEmojiDict)
+	emojiart.InitDataStructs(*recalculateEmojiDict)
 	//init num of threads for algorithm to use
 	emojiart.InitNumOfThreads()
 	//init example pictures
