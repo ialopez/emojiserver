@@ -38,7 +38,6 @@ class ImageDownload extends Component {
           const index = this.props.emojiMap.mapping[i][j];
           const img = imageLib[index];
           ctx.drawImage(img, x, y);
-          console.log("x = ", x, "y = ", y);
           x += emojiLength;
         }
         y += emojiLength;

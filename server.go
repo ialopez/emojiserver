@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"flag"
+	"github.com/coreos/go-systemd/daemon"
 	"github.com/hashicorp/golang-lru"
 	"github.com/ialopez/emojiart"
 	"image"
@@ -14,6 +15,7 @@ import (
 	"net/http" //used to handle serve http requests
 	"os"
 	"strings"
+	"time"
 )
 
 var examples []string
@@ -168,5 +170,25 @@ func main() {
 	http.Handle("/static/js", http.StripPrefix("static/js", http.FileServer(http.Dir("./build/static/js/"))))
 	http.Handle("/static/media", http.StripPrefix("static/media", http.FileServer(http.Dir("./build/static/media"))))
 
-	http.ListenAndServe(":8080", nil)
+	srv := &http.Server{
+		Addr:         ":8080",
+		ReadTimeout:  45 * time.Second,
+		WriteTimeout: 45 * time.Second,
+	}
+
+	//send ready signal to systemd
+	daemon.SdNotify(false, "READY=1")
+	go func() {
+		interval, err := daemon.SdWatchdogEnabled(false)
+		if err != nil || interval == 0 {
+			return
+		}
+		for {
+			daemon.SdNotify(false, "WATCHDOG=1")
+			time.Sleep(interval / 3)
+		}
+	}()
+
+	srv.ListenAndServe()
+
 }
