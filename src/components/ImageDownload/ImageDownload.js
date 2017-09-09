@@ -49,11 +49,6 @@ class ImageDownload extends Component {
           href: url,
         });
       });
-
-      //data is in the format "data:image/png;base64,.....", modify it to "data:application/octet-stream;base64,.......", else it doesn't work on chrome
-      //data = data.slice(data.indexOf(';'), -1);
-      //data = "data:application/octet-stream" + data;
-
     };
 
     //load images needed from server, call create image when done

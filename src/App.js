@@ -10,7 +10,7 @@ import ImageDownload from './components/ImageDownload/ImageDownload';
 
 //const domain = "http://emojify.fun";
 const domain = "http://localhost:8080";
-const debug = true; //set to true if testing with npm start else ImageDownload button crashes app
+const debug = true; //set to true if testing with npm start else ImageDownload button crashes app when testing with npm start
 
 class App extends Component {
   constructor() {
@@ -28,6 +28,7 @@ class App extends Component {
         platform: "apple",
       },
       processing: false,
+      uploadPercent: 0,
     };
     this.handleForm = this.handleForm.bind(this);
   }
@@ -62,13 +63,45 @@ class App extends Component {
   handleForm(event) {
     let type = event.target.type;
     console.log(type);
+    //choose file event
     if (type === "file") {
       const reader = new FileReader();
       const file = event.target.files[0];
       //check if file was selected
       if(file) {
+        //files must be png or jpeg
+        if (file.type !== "image/png" && file.type !== "image/jpeg" ) {
+          let formData = {
+            platform: "apple",
+          };
+          this.setState({
+            formData: formData,
+          });
+
+          console.log("file is not a valid image");
+          return
+        }
+        //files must be under 7.5mb
+        if (file.size > 7500000) {
+          let formData = {
+            platform: "apple",
+          };
+          this.setState({
+            formData: formData,
+          });
+
+          console.log("file is too big");
+          return
+        }
+
         let img = new Image();
+        let formData = this.state.formData;
+        
         img.onload = () => {
+          //get md5 of file, save it to this.key, this.state should not be used if it doesn't contain data to render
+          this.hash = CryptoJS.MD5(formData.data_uri).toString(CryptoJS.enc.Base64);
+          console.log(this.hash);
+
           //calculate min and max values for range slider
           //dimensions of output grid should be at least 10x10 and less than 100x100
           let max, min;
@@ -81,7 +114,6 @@ class App extends Component {
             min = Math.ceil(img.height/100);
           }
 
-          let formData = this.state.formData;
           formData.fileWidth = img.width;
           formData.fileHeight = img.height;
           formData.min = min;
@@ -89,24 +121,20 @@ class App extends Component {
           formData.squareSize = Math.floor((max+min)/2);
           this.setState({
             formData: formData,
-          })
+          });
+          console.log("new image set");
         }
 
         reader.onload = (upload) => {
+          formData.data_uri = upload.target.result; //formData will be sent to state in img.onload() to reduce number of set State calls
           img.src = upload.target.result;
-          let formData = this.state.formData;
-          formData.data_uri = upload.target.result;
-          //get md5 of file, save it to this.key, this.state should not be used if it doesn't contain data to render
-          this.hash = CryptoJS.MD5(upload.target.result).toString(CryptoJS.enc.Base64);
-          console.log(this.hash);
-          this.setState({
-            formData: formData,
-          });
+
         };
 
         reader.readAsDataURL(file);
       }
     }
+    //slider input event
     else if (type === "range") {
       console.log("square size = ", this.state.formData.squareSize);
       const num = event.target.value
@@ -118,6 +146,7 @@ class App extends Component {
         });
       }
     }
+    //dropdown menu event
     else if (type === "dropdown") {
       const platform = event.target.value;
       console.log(platform);
@@ -127,6 +156,7 @@ class App extends Component {
         formData: formData,
       });
     }
+    //submit button event
     else if (type === "button") {
       //submit form data to server
       this.setState({
@@ -151,12 +181,43 @@ class App extends Component {
         this.setState({
           emojiMap: data,
           processing: false,
+          uploadPercent: null,
         });
         console.log("cache successful");
       })
       .fail((xhr) => {
         //if previous ajax request failed send image
-        const promise = $.ajax({
+        this.setState({
+          uploadPercent: 0,
+        });
+        $.ajax({
+          //callback below is used to track upload progress of image
+          xhr: () => {
+            var xhr = new window.XMLHttpRequest();
+            xhr.upload.addEventListener("progress", (evt) => {
+                if (evt.lengthComputable) {
+                  const percentComplete = Math.floor(evt.loaded / evt.total * 100);
+                  if (this.state.uploadPercent !== percentComplete) {
+                    this.setState({
+                      uploadPercent: percentComplete,
+                    });
+                  }
+                }
+            }, false);
+    
+            xhr.addEventListener("progress", (evt) => {
+              if (evt.lengthComputable) {
+                const percentComplete = Math.floor(evt.loaded / evt.total * 100);
+                console.log(percentComplete);
+                if (this.state.uploadPercent !== percentComplete) {
+                  this.setState({
+                    uploadPercent: percentComplete,
+                  });
+                }
+              }
+            }, false);    
+          return xhr;
+          },
           url: domain + "/pictoemoji/",
           type: "POST",
           data: JSON.stringify({
@@ -166,13 +227,13 @@ class App extends Component {
             hash: this.hash,
           }),
           dataType: "json",
-        });
-
-        promise.done((data) => {
+        })
+        .done((data) => {
           console.log("emoji map", data);
           this.setState({
             emojiMap: data,
             processing: false,
+            uploadPercent: null,
           });
           console.log("cache miss");
           
@@ -181,17 +242,26 @@ class App extends Component {
           console.log("error", xhr);
           this.setState({
             processing: false,
+            uploadPercent: null,
           });
         })
-        }
-        );
-      }
+      })
+    }
   }
 
   render() {
     let emojiGrid, download, loading;
     if(this.state.processing) {
-      loading = <ReactLoading type="bubbles" color="#444" />
+      let percentStr;
+      if (this.state.uploadPercent) {
+        percentStr = "uploading file " + this.state.uploadPercent + "%";
+      }
+      loading = (
+        <div>
+          {percentStr}
+          <ReactLoading type="bubbles" color="#444" />
+        </div>
+      );
     }
     else if(this.state.emojiMap) {
       emojiGrid = <EmojiGrid emojiMap={this.state.emojiMap}/>;
