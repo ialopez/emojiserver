@@ -101,54 +101,37 @@ func picToEmojiCachedHandler(w http.ResponseWriter, r *http.Request) {
 that the users browser will use to render the final result
 */
 func picToEmojiHandler(w http.ResponseWriter, r *http.Request) {
-	c1 := make(chan *emojiart.EmojiMap, 1)
-	go func() {
-		var ud userData
-		//decode json from the http request body and store it in a fileInfo struct
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&ud)
-		if err != nil {
-			c1 <- nil
-			return
-		}
+	var ud userData
+	//decode json from the http request body and store it in a fileInfo struct
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&ud)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-		//decode image from data_uri
-		//cut off "data:image/png;base64," prefix before decoding
-		imageData := ud.Data_uri[strings.IndexByte(ud.Data_uri, ',')+1:]
-		reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imageData))
-		img, _, err := image.Decode(reader)
-		if err != nil {
-			c1 <- nil
-			return
-		}
+	//decode image from data_uri
+	//cut off "data:image/png;base64," prefix before decoding
+	imageData := ud.Data_uri[strings.IndexByte(ud.Data_uri, ',')+1:]
+	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imageData))
+	img, _, err := image.Decode(reader)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-		//create a picToEmoji object, this stores the image and parameters needed to create image
-		picToEmoji := emojiart.NewPicToEmoji(ud.SquareSize, ud.Platform, img)
-		//run the algorithm to create image, returns a struct
-		resultMap := picToEmoji.CreateEmojiArtMap()
+	//create a picToEmoji object, this stores the image and parameters needed to create image
+	picToEmoji := emojiart.NewPicToEmoji(ud.SquareSize, ud.Platform, img)
+	//run the algorithm to create image, returns a struct
+	resultMap := picToEmoji.CreateEmojiArtMap()
 
-		//save image to cached images
-		key := ud.Hash
-		go cachedImages.Add(key, img)
+	//save image to cached images
+	key := ud.Hash
+	go cachedImages.Add(key, img)
 
-		//turn struct into json response
-		c1 <- resultMap
-
-	}()
-
-	select {
-	case result := <-c1:
-		if result == nil {
-			http.Error(w, "internal server error", http.StatusInternalServerError)
-			return
-		}
-		err := json.NewEncoder(w).Encode(result)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	case <-time.After(time.Second * 15):
-		http.Error(w, "timeout", http.StatusGatewayTimeout)
+	err = json.NewEncoder(w).Encode(resultMap)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -187,8 +170,8 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":8080",
-		ReadHeaderTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  45 * time.Second,
+		WriteTimeout: 55 * time.Second,
 	}
 
 	//send ready signal to systemd
