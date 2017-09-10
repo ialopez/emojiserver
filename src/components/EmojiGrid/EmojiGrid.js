@@ -36,7 +36,7 @@ class EmojiGrid extends Component {
     const imageLib = {};
     let prop;
     for(prop in this.props.emojiMap.dictionary) {
-      const imgElement = <img src={domain + this.props.emojiMap.dictionary[prop]} alt="" style={{width: imgWidth}}/>;
+      const imgElement = <img src={domain + this.props.emojiMap.dictionary[prop]} alt="" style={{width: imgWidth, height: imgWidth}}/>;
       imageLib[prop] = imgElement;
     }
 
