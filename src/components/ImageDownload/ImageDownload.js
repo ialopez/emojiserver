@@ -4,6 +4,7 @@ import './ImageDownload.css';
 
 //const domain = "http://emojify.fun";
 const domain = "http://localhost:8080";
+const EMOJILENGTH = 64; //emoji images are 64x64 px
 
 /*create a download link for user to download image rendered to emojiGrid as a png file
 */ 
@@ -22,8 +23,6 @@ class ImageDownload extends Component {
     //follow similar procedure in emojigrid, download emojis and build result on canvas using emojiMap
     const imageLib = {};
 
-    //emoji images are 64x64 px
-    const emojiLength = 64;
     //draw images onto canvas
     let createImage = () => {
       //first draw a white background on canvas
@@ -38,9 +37,9 @@ class ImageDownload extends Component {
           const index = this.props.emojiMap.mapping[i][j];
           const img = imageLib[index];
           ctx.drawImage(img, x, y);
-          x += emojiLength;
+          x += EMOJILENGTH;
         }
-        y += emojiLength;
+        y += EMOJILENGTH;
       }
       //turn image from canvas into a dataURL
       this.refs.canvas.toBlob((blob) => {
@@ -86,7 +85,7 @@ class ImageDownload extends Component {
     }
     else {
       //note 64x64 is the dimensions of an emoji received from the server
-      canvas = <canvas className="invisible-canvas" ref="canvas" height={this.props.emojiMap.mapping.length*64} width={this.props.emojiMap.mapping[0].length*64} />;
+      canvas = <canvas className="invisible-canvas" ref="canvas" height={this.props.emojiMap.mapping.length*EMOJILENGTH} width={this.props.emojiMap.mapping[0].length*EMOJILENGTH} />;
       loading = (
         <div className="loading">
           <ReactLoading type="bubbles" color="#444" />

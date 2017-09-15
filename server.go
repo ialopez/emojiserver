@@ -20,6 +20,7 @@ import (
 
 var examples []string
 var cachedImages *lru.Cache
+var seed *rand.Rand
 
 const MAX_CACHED_IMG_COUNT = 15
 
@@ -59,7 +60,7 @@ func initExamples() {
 /*serve up a random emoji art example from examples folder
  */
 func examplesHandler(w http.ResponseWriter, r *http.Request) {
-	randNumber := rand.Float32()
+	randNumber := seed.Float32()
 	index := int(randNumber * float32(len(examples)))
 	http.ServeFile(w, r, examples[index])
 }
@@ -148,6 +149,8 @@ func main() {
 	initExamples()
 	//init lru cache
 	cachedImages, _ = lru.New(MAX_CACHED_IMG_COUNT)
+	//init random seed
+	seed = rand.New(rand.NewSource(69))
 
 	http.HandleFunc("/pictoemoji/", picToEmojiHandler)
 	http.HandleFunc("/pictoemojicached/", picToEmojiCachedHandler)
