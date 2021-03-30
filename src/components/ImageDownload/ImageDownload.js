@@ -53,16 +53,18 @@ class ImageDownload extends Component {
     //load images needed from server, call create image when done
     let prop;
     let imgCount = 0;
+
+    const onload = () => {
+      //increase number of images loaded so far it is equal to the length of the dictionary then call createImage()
+      imgCount++;
+      if(imgCount === Object.keys(this.props.emojiMap.dictionary).length) {
+        createImage();
+      }
+    };
+
     for(prop in this.props.emojiMap.dictionary) {
       const img = new Image();
-      img.onload = () => {
-        //increase number of images loaded so far it is equal to the length of the dictionary then call createImage()
-        imgCount++;
-        if(imgCount === Object.keys(this.props.emojiMap.dictionary).length) {
-          createImage();
-        }
-      };
-
+      img.onload = onload;
       img.src = domain + "/" + this.props.emojiMap.dictionary[prop];
       //add image to image library
       imageLib[prop] = img;

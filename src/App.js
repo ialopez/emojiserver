@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import $ from 'jquery';
 import CryptoJS from 'crypto-js'
@@ -15,7 +14,7 @@ const debug = true; //set to true if testing with npm start else ImageDownload b
 class App extends Component {
   constructor() {
     super();
-    const initData = 
+
     this.state = {
       emojiMap: null,
       formData: {
@@ -30,6 +29,7 @@ class App extends Component {
       processing: false,
       uploadPercent: 0,
     };
+
     this.handleForm = this.handleForm.bind(this);
   }
 

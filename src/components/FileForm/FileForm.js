@@ -1,6 +1,6 @@
 import React from 'react';
 import './FileForm.css';
-import { DropdownButton, MenuItem, Button, FormControl } from 'react-bootstrap';
+import { Dropdown, DropdownButton, Button, FormControl } from 'react-bootstrap';
 
 //form to collect image from user and other parameters
 function FileForm(props) {
@@ -49,13 +49,13 @@ function FileForm(props) {
         {rangeInput}
       </span>
       <span className="form-item">
-        <DropdownButton bsStyle="default" title={props.formData.platform} onSelect={props.onChange}>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "apple"}}}>Apple</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "google"}}}>Google</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "facebook"}}}>Facebook</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "facebook-messenger"}}}>Facebook-Messenger</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "twitter"}}}>Twitter</MenuItem>
-          <MenuItem eventKey={{target: {type: "dropdown", value: "emojione"}}}>Emojione</MenuItem>
+        <DropdownButton title={props.formData.platform} onSelect={props.onChange}>
+          <Dropdown.Item eventKey={"apple"}>Apple</Dropdown.Item>
+          <Dropdown.Item eventKey={"google"}>Google</Dropdown.Item>
+          <Dropdown.Item eventKey={"facebook"}>Facebook</Dropdown.Item>
+          <Dropdown.Item eventKey={"facebook-messenger"}>Facebook-Messenger</Dropdown.Item>
+          <Dropdown.Item eventKey={"twitter"}>Twitter</Dropdown.Item>
+          <Dropdown.Item eventKey={"emojione"}>Emojione</Dropdown.Item>
         </DropdownButton>
       </span>
       <span className="form-item">
