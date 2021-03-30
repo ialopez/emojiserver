@@ -87,7 +87,7 @@ class ImageDownload extends Component {
       //note 64x64 is the dimensions of an emoji received from the server
       canvas = <canvas className="invisible-canvas" ref="canvas" height={this.props.emojiMap.mapping.length*EMOJILENGTH} width={this.props.emojiMap.mapping[0].length*EMOJILENGTH} />;
       loading = (
-        <div className="loading">
+        <div className="loading d-flex">
           <ReactLoading type="bubbles" color="#444" />
         </div>
       );

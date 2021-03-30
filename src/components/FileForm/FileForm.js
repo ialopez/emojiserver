@@ -36,7 +36,7 @@ function FileForm(props) {
   }
 
   return (
-    <div className="form">
+    <div className="form d-flex flex-row">
       <span className="form-item">
         <FormControl
           type="file"

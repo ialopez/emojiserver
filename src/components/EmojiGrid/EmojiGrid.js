@@ -1,5 +1,4 @@
 import React from 'react';
-import './EmojiGrid.css';
 
 //const domain = "http://emojify.fun";
 const domain = "http://localhost:8080";
@@ -45,13 +44,13 @@ function EmojiGrid(props) {
     for (let j = 0; j < props.emojiMap.mapping[0].length; j++) {
       images.push(imageLib[props.emojiMap.mapping[i][j]]);
     }
-    const row = <div className="emoji-grid-row">{images}</div>;
+    const row = <div className="d-flex flex-row">{images}</div>;
     grid.push(row);
   }
 
   return (
     <div>
-      <div className="emoji-grid" style={{width: width, height: height}}>
+      <div style={{width: width, height: height}}>
         {grid}
       </div>
     </div>

@@ -274,7 +274,7 @@ class App extends Component {
         <div className="App-header">
           <h2 style={{color: "#fff"}}>Emojify</h2>
         </div>
-        <div className="App-body">
+        <div className="App-body d-flex flex-column">
           <div className="options-box">
             <FileForm
             formData={this.state.formData}
