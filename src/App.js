@@ -29,8 +29,6 @@ class App extends Component {
       processing: false,
       uploadPercent: 0,
     };
-
-    this.handleForm = this.handleForm.bind(this);
   }
 
   //request example picture from /examples/ server api
@@ -59,8 +57,19 @@ class App extends Component {
     })
   }
 
+  handleDropdown = (eventKey) => {
+    const platform = eventKey;
+    console.log(platform);
+    let formData = {...this.state.formData};
+    formData.platform = platform;
+
+    this.setState({
+      formData: formData,
+    });
+  }
+
   //handles all fields and inputs in fileForm element
-  handleForm(event) {
+  handleForm = (event) => {
     let type = event.target.type;
     console.log(type);
     //choose file event
@@ -145,16 +154,6 @@ class App extends Component {
           formData: formData,
         });
       }
-    }
-    //dropdown menu event
-    else if (type === "dropdown") {
-      const platform = event.target.value;
-      console.log(platform);
-      let formData = this.state.formData;
-      formData.platform = platform;
-      this.setState({
-        formData: formData,
-      });
     }
     //submit button event
     else if (type === "button") {
@@ -277,8 +276,9 @@ class App extends Component {
         <div className="App-body d-flex flex-column">
           <div className="options-box">
             <FileForm
-            formData={this.state.formData}
-            onChange={this.handleForm}
+              formData={this.state.formData}
+              onChange={this.handleForm}
+              onDropdownChange={this.handleDropdown}
             />
             {download}
           </div>

@@ -49,7 +49,7 @@ function FileForm(props) {
         {rangeInput}
       </span>
       <span className="form-item">
-        <DropdownButton title={props.formData.platform} onSelect={props.onChange}>
+        <DropdownButton title={props.formData.platform} onSelect={props.onDropdownChange}>
           <Dropdown.Item eventKey={"apple"}>Apple</Dropdown.Item>
           <Dropdown.Item eventKey={"google"}>Google</Dropdown.Item>
           <Dropdown.Item eventKey={"facebook"}>Facebook</Dropdown.Item>
